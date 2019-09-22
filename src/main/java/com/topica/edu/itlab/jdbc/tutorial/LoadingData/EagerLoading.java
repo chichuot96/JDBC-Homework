@@ -1,4 +1,4 @@
-package LoadingData;
+package com.topica.edu.itlab.jdbc.tutorial.LoadingData;
 
 import java.sql.Statement;
 
