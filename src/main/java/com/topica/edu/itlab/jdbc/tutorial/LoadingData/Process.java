@@ -1,12 +1,17 @@
 package com.topica.edu.itlab.jdbc.tutorial.LoadingData;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.topica.edu.itlab.jdbc.tutorial.annotation.Column;
 import com.topica.edu.itlab.jdbc.tutorial.annotation.OneToMany;
@@ -45,32 +50,56 @@ public class Process {
 		return stmt;
 	}
 	
-	public static List<ClassEntity> loadListClass(Statement stmt){
-		List<ClassEntity> listC=new ArrayList<ClassEntity>();
-		String sql="select * from "+ClassEntity.class.getAnnotation(Table.class).name();
+	public static  <T> List<T> loadListClass(Statement stmt , Class<T> cl){
+		List<T> list=new ArrayList<T>();
+		
+		String sql="select * from "+cl.getAnnotation(Table.class).name();
+		Field[] fields=cl.getDeclaredFields();
+		
+		List<Field> f=Arrays.asList(fields);
+		for(Field ff: f) {
+			ff.setAccessible(true);
+		}
 		
 		try {
-			String columnId=ClassEntity.class.getDeclaredField("id").getAnnotation(Column.class).name();
-			String columnName=ClassEntity.class.getDeclaredField("name").getAnnotation(Column.class).name();
 			ResultSet rs=stmt.executeQuery(sql);
 			while(rs.next()) {
-				ClassEntity classEn=new ClassEntity();
+				T t = cl.getDeclaredConstructor().newInstance();
 				
-				classEn.setId(rs.getLong(columnId));
-				classEn.setName(rs.getString(columnName));
-				listC.add(classEn);
+				for(int i=0;i<fields.length;i++) {
+					Column column=fields[i].getAnnotation(Column.class);
+					Object o=null;
+					if(column!=null) {
+						o=rs.getObject(column.name(),fields[i].getType());
+					}
+					fields[i].set(t,o );
+				}
+				list.add(t);
+				
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoSuchFieldException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (SecurityException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		return listC;
+		return list;
 	}
 	
 	public static List<StudentEntity> loadListStudent(Statement stmt, ClassEntity c){

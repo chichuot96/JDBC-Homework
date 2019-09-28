@@ -12,9 +12,8 @@ public class LazyLoading {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		Statement stmt=Process.connectDB();
-		List<ClassEntity> listC=Process.loadListClass(stmt);
+		List<ClassEntity> listC=Process.loadListClass(stmt,ClassEntity.class);
 		for(ClassEntity c:listC) {
-			System.out.println(c.toString());
 			if(c.getListStudent()==null) {
 				c.setListStudent(Process.loadListStudent(stmt, c));
 			}
